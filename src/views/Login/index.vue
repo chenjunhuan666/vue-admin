@@ -19,6 +19,11 @@
                     <el-input type="password" v-model="ruleForm.pass" autocomplete="off" minlength="6" maxlength="20"></el-input>
                 </el-form-item>
 
+                <el-form-item  prop="pass2" class="item-form" v-show="model === 'register'">
+                    <label>确认密码</label>
+                    <el-input type="password" v-model="ruleForm.pass2" autocomplete="off" minlength="6" maxlength="20"></el-input>
+                </el-form-item>
+
                 <el-form-item  prop="code" class="item-form">
                     <label>验证码</label>
                     <el-row :gutter="11">
@@ -39,54 +44,68 @@
     </div>
 </template>
 
-
 <script>
+import { stripscript, verifyeEmail, verifyPass, verifyCode } from '@utils/validate'
 export default {
     name: "Login",
     data(){
         // 验证用户名-邮箱
         var validateEmail = (rule, value, callback) => {
-            var reg = /^[A-Za-zd0-9]+([-_.][A-Za-zd]+)*@([A-Za-zd]+[-.])+[A-Za-zd]{2,5}$/
             if (!value) {
                 callback(new Error('邮箱不能为空！'));
-            }else if(!reg.test(value)){
+            }else if(verifyeEmail(value)){
                 callback(new Error('用户名格式有误！'));
             }else {
-                
                 callback();
             }
-           
         };
         // 验证-密码
         var validatePass = (rule, value, callback) => {
-            const reg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,20}$/;
-             if (!value) {
+            this.ruleForm.pass = stripscript(value)
+            value = this.ruleForm.pass
+            if (!value) {
                 callback(new Error('密码不能为空！'));
+            }else if(verifyPass(value)){
+                callback(new Error('请输入大于6位小于20位数字+字母！'));
+            }else{
+                callback();
             }
-            if(!reg.test(value)){
-                callback(new Error('请输入大于6位小于20位数字+字母!'));
-            }
-            callback();
         };
+        // 验证-确认密码
+        var validatePass2 = (rule, value, callback) => {
+            if(this.model === 'login'){
+                callback()
+            }
+            if (value === '') {
+                callback(new Error('请再次输入密码！'));
+            } else if (value !== this.ruleForm.pass) {
+                callback(new Error('两次输入密码不一致！'));
+            } else {
+                callback();
+            }
+        }
         // 验证-验证码
-        var validateCode = (rule, value, callback) => {
-            var reg = /^[a-z0-9]{6}$/
+        var validateCode = (rule, value, callback) => {  
+            // this.ruleForm.code = stripscript(value)
+            // value = this.ruleForm.code
             if (!value) {
                 callback(new Error('验证码不能为空！'));
-            }else if(!reg.test(value)){
-                callback(new Error('验证码为6位的数字或字母'));
+            }else if(verifyCode(value)){
+                callback(new Error('验证码格式不正确！'));
             }else{
                 callback();
             }
         };
         return{
             menuTab: [
-                {txt: '登录', id: 0, current: true},
-                {txt: '注册', id: 1, current: false}
+                {txt: '登录', id: 0, current: true, type: 'login'},
+                {txt: '注册', id: 1, current: false, type: 'register'}
             ],
+            model: 'login',
             ruleForm: {
                 email: '',
                 pass: '',
+                pass2: '',
                 code: ''
             },
             rules: {
@@ -95,6 +114,9 @@ export default {
                 ],
                 pass: [
                     { validator: validatePass, trigger: 'change' }
+                ],
+                pass2: [
+                    { validator: validatePass2, trigger: 'change' }
                 ],
                 code: [
                     { validator: validateCode, trigger: 'change' }
@@ -108,16 +130,19 @@ export default {
             this.menuTab.forEach(item => {
                 item.current = false
             })
+            // 高光
             item.current = true
+            // 修改模块值
+            this.model = item.type
         },  
         submitForm(formName) {
             this.$refs[formName].validate((valid) => {
-            if (valid) {
-                alert('submit!');
-            } else {
-                console.log('error submit!!');
-                return false;
-            }
+                if (valid) {
+                    alert('submit!');
+                } else {
+                    console.log('error submit!!');
+                    return false;
+                }
             });
         }, 
     }
@@ -135,9 +160,6 @@ export default {
 .login-wrap{
     width: 330px;
     margin: auto;
-    // display: flex;
-    // align-items: center;
-    // justify-content: space-around;
     ul{
         text-align: center;
         li{
@@ -155,7 +177,6 @@ export default {
     }
     // 登录表单
     .login-form{
-
         margin-top: 29px;
         label{
             display: block;
@@ -173,7 +194,6 @@ export default {
         .login-btn{
             margin-top: 19px;
         }
-
     }
     
 }
@@ -183,17 +203,6 @@ export default {
 
 .login-form{
 
-    // .el-form-item{
-    //     margin-bottom: 5px;
-    // }
-    // // label字体
-    // .el-form-item{
-    //     .el-form-item__label{
-    //         color: white;
-    //         font-size: 12px;
-    //         margin-bottom: 3px;
-    //     }
-    // }
 
 }
 </style>
