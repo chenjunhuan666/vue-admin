@@ -45,14 +45,12 @@
 </template>
 
 <script>
-import { reactive, ref, onMounted } from '@vue/composition-api'
 import { stripscript, verifyeEmail, verifyPass, verifyCode } from '@utils/validate'
 export default {
     name: "Login",
-    setup(props, { refs }){
-
+    data(){
         // 验证用户名-邮箱
-        let validateEmail = (rule, value, callback) => {
+        var validateEmail = (rule, value, callback) => {
             if (!value) {
                 callback(new Error('邮箱不能为空！'));
             }else if(verifyeEmail(value)){
@@ -62,9 +60,9 @@ export default {
             }
         };
         // 验证-密码
-        let validatePass = (rule, value, callback) => {
-            ruleForm.pass = stripscript(value)
-            value = ruleForm.pass
+        var validatePass = (rule, value, callback) => {
+            this.ruleForm.pass = stripscript(value)
+            value = this.ruleForm.pass
             if (!value) {
                 callback(new Error('密码不能为空！'));
             }else if(verifyPass(value)){
@@ -74,20 +72,20 @@ export default {
             }
         };
         // 验证-确认密码
-        let validatePass2 = (rule, value, callback) => {
-            if(model.value === 'login'){
+        var validatePass2 = (rule, value, callback) => {
+            if(this.model === 'login'){
                 callback()
             }
             if (value === '') {
                 callback(new Error('请再次输入密码！'));
-            } else if (value !== ruleForm.pass) {
+            } else if (value !== this.ruleForm.pass) {
                 callback(new Error('两次输入密码不一致！'));
             } else {
                 callback();
             }
         }
         // 验证-验证码
-        let validateCode = (rule, value, callback) => {  
+        var validateCode = (rule, value, callback) => {  
             // this.ruleForm.code = stripscript(value)
             // value = this.ruleForm.code
             if (!value) {
@@ -98,23 +96,19 @@ export default {
                 callback();
             }
         };
-
-        // 切换菜单值
-        const menuTab = reactive([
+        return{
+            menuTab: [
                 {txt: '登录', id: 0, current: true, type: 'login'},
                 {txt: '注册', id: 1, current: false, type: 'register'}
-        ])
-        // model值
-        const model = ref('login')
-        // 表单绑定数据
-        const ruleForm = reactive({
-            email: '',
-            pass: '',
-            pass2: '',
-            code: ''
-        })
-        // 表单的验证
-        const rules = reactive({
+            ],
+            model: 'login',
+            ruleForm: {
+                email: '',
+                pass: '',
+                pass2: '',
+                code: ''
+            },
+            rules: {
                 email: [
                     { validator: validateEmail, trigger: 'change' }
                 ],
@@ -127,48 +121,31 @@ export default {
                 code: [
                     { validator: validateCode, trigger: 'change' }
                 ]
-        })
-        /* 
-            生命周期
-        */
-        // 挂载完成
-        onMounted(() => {
-
-        })
-
-       /* 
-        声明函数方法
-       */
+            }
+        }
+    },
+    methods: {
         // 切换登录、注册
-        const toggleMenu = (item => {
-            menuTab.forEach(item => {
+        toggleMenu(item){
+            this.menuTab.forEach(item => {
                 item.current = false
             })
             // 高光
             item.current = true
             // 修改模块值
-            model.value = item.type
-        }) 
-        const submitForm = (formName => {
-            refs[formName].validate((valid) => {
+            this.model = item.type
+        },  
+        submitForm(formName) {
+            this.$refs[formName].validate((valid) => {
                 if (valid) {
                     alert('submit!');
                 } else {
                     console.log('error submit!!');
                     return false;
                 }
-            })
-        })
-        
-        return {
-            menuTab,
-            model,
-            ruleForm,
-            rules,
-            toggleMenu,
-            submitForm
-        }
-    }, 
+            });
+        }, 
+    }
 }
 </script>
 
